@@ -95,7 +95,6 @@ public class PedidosClienteDAO {
     public ArrayList<ItensPedidoClienteEstendida> carregarListaItens() {
         ArrayList<ItensPedidoClienteEstendida> listaItens = new ArrayList<>();
         ItensPedidoClienteEstendida itemPedido;
-        listaItens = null;
         bd = BD.getInstance();
         sql = "SELECT i.id,"
                 + " i.id_pedido_cli,"
@@ -105,7 +104,7 @@ public class PedidosClienteDAO {
                 + " i.data_entrega,"
                 + " p.descricao FROM item_pedido_cli AS i LEFT JOIN produtos AS p"
                 + " ON  i.id_produto = p.id"
-                + " WHERE id = ?;";
+                + " WHERE i.id_pedido_cli = ?;";
         try {
             statement = bd.connection.prepareStatement(sql);
             statement.setString(1, String.valueOf(pedidoCliente.getId()));
@@ -124,12 +123,37 @@ public class PedidosClienteDAO {
                 itemPedido.setDescricao_produto(resultSet.getString(7));
                 listaItens.add(itemPedido);
             }
+            System.out.println("numeroItem = " + numeroItem);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Problemas na localização dos itens!\n" + e);
         } finally {
             BD.getInstance().close();
         }
         return listaItens;
+    }
+    
+    public boolean alterar1() {
+        bd = BD.getInstance();
+        try {
+            sql = "UPDATE pedidos_cli SET id_cliente = ?,"
+                    + " id_endereco_entrega = ?,"
+                    + " condicao_pag = ?,"
+                    + " data_pedido = ?"
+               + " WHERE id = ?;";
+            PreparedStatement statement = bd.connection.prepareStatement(sql);
+            statement.setString(1, pedidoCliente.getId_cliente());
+            statement.setString(2, pedidoCliente.getId_endereco_entrega());
+            statement.setString(3, pedidoCliente.getCondicao_pag());
+            statement.setDate(4, (Date) pedidoCliente.getData_pedido());
+            statement.setInt(5, pedidoCliente.getId());
+            statement.executeUpdate();
+        } catch (Exception erro) {
+            JOptionPane.showMessageDialog(null, "erro: " + erro.toString() + " \n" + sql);
+            return false;
+        } finally {
+            BD.getInstance().close();
+        }
+        return true;
     }
     
     public boolean gravar1() {
@@ -162,7 +186,52 @@ public class PedidosClienteDAO {
         }
         return true;
     }
+    
+    public boolean excluir1() {
+        bd = BD.getInstance();
+        try {
+            sql = "DELETE FROM pedidos_cli WHERE id = ?;";
+            PreparedStatement statement = bd.connection.prepareStatement(sql);
+            statement.setInt(1, pedidoCliente.getId());
+            statement.executeUpdate();
+            sql = "DELETE FROM item_pedido_cli WHERE id_pedido_cli = ?;";
+            PreparedStatement statement2 = bd.connection.prepareStatement(sql);
+            statement2.setInt(1, pedidoCliente.getId());
+            statement2.executeUpdate();
+        } catch (Exception erro) {
+            JOptionPane.showMessageDialog(null, "Erro ao excluír! \n" + erro);
+            return false;
+        } finally {
+            BD.getInstance().close();
+        }
+        return true;
+    }
 
+    public boolean alterar2() {
+        bd = BD.getInstance();
+        try {
+            sql = "UPDATE item_pedido_cli SET"
+                    + " id_produto = ?,"
+                    + " quantidade = ?,"
+                    + " preco = ?"
+               + " WHERE id = ?;";
+            PreparedStatement statement = bd.connection.prepareStatement(sql);
+            statement.setString(1, itemPedidoClienteEstendida.getId_produto());
+            statement.setDouble(2, itemPedidoClienteEstendida.getQuantidade());
+            statement.setDouble(3, itemPedidoClienteEstendida.getPreco());
+            statement.setInt(4, itemPedidoClienteEstendida.getId());
+            //statement.setDate(5, (Date) itemPedidoClienteEstendida.getData_entrega());
+            statement.executeUpdate();
+            return true;
+        } catch (Exception erro) {
+            JOptionPane.showMessageDialog(null, "Erro ao gravar alteração de item!\n"
+            + erro);
+        } finally {
+            BD.getInstance().close();
+        }
+        return false;
+    }
+    
     public boolean gravar2() {
         bd = BD.getInstance();
         try {

@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import model.Clientes;
 import model.ItensPedidoCliente;
@@ -43,9 +45,9 @@ public class GuiPedidoCliente extends JPanel {
     
     JButton btSair, btNovo1, btGravar1, btAlterar1, btExcluir1, btNovo2, 
             btGravar2, btAlterar2, btExcluir2, btBaixarEstoque, btLocalizar,
-            btLimpar;
+            btLimpar, btLimpar2;
     
-    int numeroItens;
+    int numeroItens, linha;
     
     JTable tbPedido;
     DefaultTableModel tableModel = new DefaultTableModel(new String[]{}, 0) {};
@@ -79,6 +81,8 @@ public class GuiPedidoCliente extends JPanel {
         btGravar2 = new JButton(" Gravar Item ");
         btAlterar2 = new JButton(" Alterar Item ");
         btExcluir2 = new JButton(" Excluir Item ");
+        btLimpar2 = new JButton(" Limpar Item ");
+        
         btBaixarEstoque = new JButton(" Baixar Estoque ");
         btLocalizar = new JButton(" Localizar ");
         
@@ -139,10 +143,12 @@ public class GuiPedidoCliente extends JPanel {
         btLocalizar.setBounds(790, 100, 150, 25);
         btLimpar.setBounds(790, 130, 150, 25);
         
-        btNovo2.setBounds(600, 280, 150, 25);
-        btGravar2.setBounds(790, 280, 150, 25);
-        btAlterar2.setBounds(600, 310, 150, 25);
-        btExcluir2.setBounds(790, 310, 150, 25);
+        btNovo2.setBounds(500, 280, 130, 25);
+        btGravar2.setBounds(660, 280, 130, 25);
+        btAlterar2.setBounds(500, 310, 130, 25);
+        btExcluir2.setBounds(660, 310, 130, 25);
+        btLimpar2.setBounds(820, 280, 130, 25);
+        
         btBaixarEstoque.setBounds(790, 25, 150, 25);
         
         scrollTable = new JScrollPane();
@@ -152,6 +158,7 @@ public class GuiPedidoCliente extends JPanel {
         }
         
         tbPedido = new JTable(tableModel);
+        tbPedido.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         scrollTable.setViewportView(tbPedido);
         
@@ -167,6 +174,7 @@ public class GuiPedidoCliente extends JPanel {
         add(btBaixarEstoque);
         add(btLocalizar);
         add(btLimpar);
+        add(btLimpar2);
         
         add(lbTituloTela);
         add(lbTituloTela);
@@ -217,28 +225,36 @@ public class GuiPedidoCliente extends JPanel {
         
         btNovo1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               numeroItens = 0;
-               limparCamposPedido();
-               setTFPedido(true);
-               tfId_pedido.setEnabled(false);
+                tableModel.setNumRows(0);
+                numeroItens = 0;
+                limparCamposPedido();
+                limparCamposItem();
+                setTFPedido(true);
+                setTFItem(false, false);
+                setBotoesItem(false);
+                tfId_pedido.setEnabled(false);
             }
         });
         
         btLocalizar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int Id_pedido = Integer.parseInt(tfId_pedido.getText());
+                setBotoesItem(false);
+                setTFPedido(false);
                 if(!pedidosDAO.localizarPedido(Id_pedido)) {
                     JOptionPane.showMessageDialog(null, "Pedido não cadastrado!");
                 } else {
                     listaItens = pedidosDAO.carregarListaItens();  
-                    if(listaItens == null) {
+                    if(listaItens.size() == 0) {
                         JOptionPane.showMessageDialog(null, "Pedido não tem itens cadastrados, exclua o pedido!");
+                        btExcluir1.setEnabled(true);
                     } else {
                         tfId_pedido.setText(String.valueOf(pedidosDAO.pedidoCliente.getId()));
                         tfId_cliente.setText(pedidosDAO.pedidoCliente.getId_cliente());
                         tfId_endereco_entrega.setText(pedidosDAO.pedidoCliente.getId_endereco_entrega());
                         tfIdCondicao_pag.setText(pedidosDAO.pedidoCliente.getCondicao_pag());
                         tfData_pedido.setText("" + pedidosDAO.pedidoCliente.getData_pedido());
+                        tableModel.setNumRows(0);
                         for(int i = 0; i < listaItens.size(); i++ ) {
                             tableModel.addRow(new Object[] {
                                 listaItens.get(i).getId(),
@@ -249,7 +265,38 @@ public class GuiPedidoCliente extends JPanel {
                                 listaItens.get(i).getQuantidade() * listaItens.get(i).getPreco()
                             });
                         }
+                        limparCamposItem();
+                        // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
+                        setBotoesPedido(true, false, true, true, true, true, false);
+                        //btNovo2, btGravar2, btAlterar2, btExcluir2, btLimpar2
+                        setBotoesItem(true, false, false, false, false);
+                        setTFPedido(true);
+                        setTFItem(false, false);
                     }
+                }
+                return;
+            }
+        });
+        
+        btAlterar1.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                pedidosDAO.pedidoCliente.setId(Integer.parseInt(tfId_pedido.getText()));
+                pedidosDAO.pedidoCliente.setId_cliente(tfId_cliente.getText());
+                pedidosDAO.pedidoCliente.setId_endereco_entrega(tfId_endereco_entrega.getText());
+                pedidosDAO.pedidoCliente.setCondicao_pag(tfIdCondicao_pag.getText());
+                try {
+                    // Erro está aqui.
+                    nova_data = formatoData.parse(tfData_pedido.getText());
+                    java.sql.Date sqlData = new java.sql.Date(nova_data.getTime());
+                    pedidosDAO.pedidoCliente.setData_pedido(sqlData);
+                } catch (ParseException erro) {
+                    JOptionPane.showMessageDialog(null, "Erro ao converter a data");
+                    return;
+                }
+                if(!pedidosDAO.alterar1()) {
+                    JOptionPane.showMessageDialog(null, "Problema para alterar cabeçalho do Pedido!");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Cabeçalho do Pedido alterado com sucesso!");
                 }
                 return;
             }
@@ -258,9 +305,12 @@ public class GuiPedidoCliente extends JPanel {
         btLimpar.addActionListener(new ActionListener() {
            public void actionPerformed(ActionEvent e) {
                limparCamposPedido();
-               //novo1, gravar1, alterar1, localizar, limpar, baixarEstoque
+               // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
                setBotoesPedido(true, false, false, false, true, true, false);
                setBotoesItem(false);
+               setTFPedido(false);
+               tfId_pedido.setEnabled(true);
+               tableModel.setNumRows(0);
            }
         });
         
@@ -278,7 +328,7 @@ public class GuiPedidoCliente extends JPanel {
                     java.sql.Date sqlData = new java.sql.Date(nova_data.getTime());
                     pedidosDAO.pedidoCliente.setData_pedido(sqlData);
                 } catch (ParseException erro) {
-                    JOptionPane.showMessageDialog(null, "Erro. ao converter a data");
+                    JOptionPane.showMessageDialog(null, "Erro ao converter a data");
                     return;
                 }
                 if(!pedidosDAO.gravar1()) {
@@ -288,11 +338,27 @@ public class GuiPedidoCliente extends JPanel {
                     JOptionPane.showMessageDialog(null, "Pedido gravado com sucesso!");
                     tfId_pedido.setText(String.valueOf(pedidosDAO.pedidoCliente.getId()));
                     // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
-                    setBotoesPedido(false, false, true, true, true, false, false);
-                    setBotoesItem(true);
+                    setBotoesPedido(false, false, true, true, false, false, false);
+                    setBotoesItem(true, true, false, false, false);
                     setTFItem(false, false);
                     return;
                 }
+            }
+        });
+        
+        btExcluir1.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if(pedidosDAO.excluir1()) {
+                    tableModel.setNumRows(0);
+                    JOptionPane.showMessageDialog(null, "Pedido excluído com sucesso!");
+                    limparCamposPedido();
+                    // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
+                    setBotoesPedido(true, false, false, false, false, true, false);
+                    setBotoesItem(false);
+                } else {                   
+                    JOptionPane.showMessageDialog(null, "Não consegui excluír pedido!");
+                }
+                return;
             }
         });
         
@@ -307,6 +373,85 @@ public class GuiPedidoCliente extends JPanel {
             }
         });
         
+        tbPedido.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) { 
+                linha = tbPedido.getSelectedRow();
+                if(linha != -1) {
+                    tfId_item.setText(String.valueOf(listaItens.get(linha).getId()));
+                    tfId_produto.setText(listaItens.get(linha).getId_produto());
+                    tfQuantidade.setText(String.valueOf(listaItens.get(linha).getQuantidade()));
+                    tfPreco.setText(String.valueOf(listaItens.get(linha).getPreco()));
+                    setTFItem(false, true);
+                    //btNovo2, btGravar2, btAlterar2, btExcluir2, btLimpar2
+                    setBotoesItem(true, false, true, true, true);
+                }
+                return;
+            }
+        });
+        
+        btLimpar2.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                limparCamposItem();
+                //btNovo2, btGravar2, btAlterar2, btExcluir2, btLimpar2
+                setBotoesItem(true, false, false, false, false);
+                setTFItem(false, false);
+                return;
+            }
+        });
+        
+        btAlterar2.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Double quantidade = Double.parseDouble(tfQuantidade.getText());
+                if(quantidade == 0) {
+                    JOptionPane.showMessageDialog(null, "Quantidade não pode ser zero!");
+                    tfQuantidade.requestFocus();
+                    return;
+                }
+                Double preco = Double.parseDouble(tfPreco.getText());
+                if(preco == 0) {
+                    JOptionPane.showMessageDialog(null, "Preço não pode ser zero!");
+                    tfPreco.requestFocus();
+                    return;
+                }
+      
+                pedidosDAO.itemPedidoClienteEstendida.setId_pedido_cli(pedidosDAO.pedidoCliente.getId());
+                pedidosDAO.itemPedidoClienteEstendida.setId(Integer.parseInt(tfId_item.getText()));
+                pedidosDAO.itemPedidoClienteEstendida.setId_produto(tfId_produto.getText());
+                pedidosDAO.itemPedidoClienteEstendida.setQuantidade(quantidade);
+                pedidosDAO.itemPedidoClienteEstendida.setPreco(preco);
+                pedidosDAO.itemPedidoClienteEstendida.setDescricao_produto(pedidosDAO.produto.getDescricao());
+                
+                if(!pedidosDAO.alterar2()) {
+                    JOptionPane.showMessageDialog(null, "Erro ao gravar alteração!");
+                } else {
+                    listaItens.get(linha).setId_produto(
+                            pedidosDAO.itemPedidoClienteEstendida.getId_produto());
+                    listaItens.get(linha).setQuantidade(
+                            pedidosDAO.itemPedidoClienteEstendida.getQuantidade());
+                    listaItens.get(linha).setPreco(
+                            pedidosDAO.itemPedidoClienteEstendida.getPreco());
+                    listaItens.get(linha).setDescricao_produto(pedidosDAO.produto.getDescricao());
+                    tableModel.setNumRows(0);
+                    for(int i = 0; i < listaItens.size(); i++ ) {
+                        tableModel.addRow(new Object[] {
+                            listaItens.get(i).getId(),
+                            listaItens.get(i).getId_produto(),
+                            listaItens.get(i).getDescricao_produto(),
+                            listaItens.get(i).getQuantidade(),
+                            listaItens.get(i).getPreco(),
+                            listaItens.get(i).getQuantidade() * listaItens.get(i).getPreco()
+                        });
+                    }   
+                    limparCamposItem();
+                    //btNovo2, btGravar2, btAlterar2, btExcluir2, btLimpar2
+                    setBotoesItem(true, false, false, false, false);
+                    setTFPedido(true);
+                    setTFItem(false, false);
+                }
+                return;
+            }
+        });
+        
         tfId_produto.addFocusListener(new FocusAdapter() {
             public void focusLost(FocusEvent e) {
                 if(!pedidosDAO.localizarProduto(tfId_produto.getText())) {
@@ -314,7 +459,6 @@ public class GuiPedidoCliente extends JPanel {
                     tfId_produto.requestFocus();
                     return;
                 } else {
-                    // debug
                     System.out.println("Preço de venda: " + pedidosDAO.produto.getPreco_venda());
                     tfPreco.setText(String.valueOf(pedidosDAO.produto.getPreco_venda()));
                     return;
@@ -367,9 +511,8 @@ public class GuiPedidoCliente extends JPanel {
                     JOptionPane.showMessageDialog(null, "Não consegui gravar o Item!");
                 }
             }
-        });
+        });     
         
-     
     }
     
     private void setBotoesPedido(boolean novo1, boolean gravar1, boolean alterar1,
@@ -384,11 +527,12 @@ public class GuiPedidoCliente extends JPanel {
     }
     
     private void setBotoesItem(boolean novo2, boolean gravar2, boolean alterar2,
-            boolean excluir2) {
+            boolean excluir2, boolean limpar2) {
         btNovo2.setEnabled(novo2);
         btGravar2.setEnabled(gravar2);
         btAlterar2.setEnabled(alterar2);
         btExcluir2.setEnabled(excluir2);
+        btLimpar2.setEnabled(limpar2);
     }
     
     private void setBotoesItem(boolean portas) {
@@ -396,6 +540,7 @@ public class GuiPedidoCliente extends JPanel {
         btGravar2.setEnabled(portas);
         btAlterar2.setEnabled(portas);
         btExcluir2.setEnabled(portas);
+        btLimpar2.setEnabled(portas);
     }
     
     private void setTFPedido(boolean portas) {
@@ -420,7 +565,7 @@ public class GuiPedidoCliente extends JPanel {
         tfIdCondicao_pag.setText("");
         nova_data = new Date();
         tfData_pedido.setText(formatoData.format(nova_data.getTime()));
-        // novo1, gravar1, alterar1, localizar, limpar, baixarEstoque
+        // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
         setBotoesPedido(false, true, false, false, false, true, false);
         setBotoesItem(false);
     }
@@ -431,7 +576,7 @@ public class GuiPedidoCliente extends JPanel {
         tfQuantidade.setText("");
         tfPreco.setText("");
         setTFItem(false, true);
-        setBotoesItem(true, true, false, false);
+        setBotoesItem(true, true, false, false, false);
     }
     
 }
