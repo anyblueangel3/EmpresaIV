@@ -263,6 +263,22 @@ public class PedidosClienteDAO {
         }
         return true;
     }
+    
+    public boolean excluir2() {
+        bd = BD.getInstance();
+        try {
+            sql = "DELETE FROM item_pedido_cli WHERE id = ?;";
+            PreparedStatement statement = bd.connection.prepareStatement(sql);
+            statement.setInt(1, itemPedidoClienteEstendida.getId());
+            statement.executeUpdate();
+        } catch (Exception erro) {
+            JOptionPane.showMessageDialog(null, "Erro ao excluir item!\n" + erro);
+            return false;
+        } finally {
+            BD.getInstance().close();
+        }
+        return true;
+    }
 
     
 }

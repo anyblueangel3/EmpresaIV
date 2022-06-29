@@ -431,6 +431,7 @@ public class GuiPedidoCliente extends JPanel {
                     listaItens.get(linha).setPreco(
                             pedidosDAO.itemPedidoClienteEstendida.getPreco());
                     listaItens.get(linha).setDescricao_produto(pedidosDAO.produto.getDescricao());
+                    
                     tableModel.setNumRows(0);
                     for(int i = 0; i < listaItens.size(); i++ ) {
                         tableModel.addRow(new Object[] {
@@ -441,7 +442,7 @@ public class GuiPedidoCliente extends JPanel {
                             listaItens.get(i).getPreco(),
                             listaItens.get(i).getQuantidade() * listaItens.get(i).getPreco()
                         });
-                    }   
+                    }
                     limparCamposItem();
                     //btNovo2, btGravar2, btAlterar2, btExcluir2, btLimpar2
                     setBotoesItem(true, false, false, false, false);
@@ -511,7 +512,30 @@ public class GuiPedidoCliente extends JPanel {
                     JOptionPane.showMessageDialog(null, "Não consegui gravar o Item!");
                 }
             }
-        });     
+        });
+        
+        btExcluir2.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                pedidosDAO.itemPedidoClienteEstendida.setId(Integer.parseInt(tfId_item.getText()));
+                if(!pedidosDAO.excluir2()) {
+                    JOptionPane.showMessageDialog(null, "Problema ao excluir item!");
+                } else {
+                    listaItens.remove(linha);
+                    tableModel.setNumRows(0);
+                    for(int i = 0; i < listaItens.size(); i++ ) {
+                        tableModel.addRow(new Object[] {
+                            listaItens.get(i).getId(),
+                            listaItens.get(i).getId_produto(),
+                            listaItens.get(i).getDescricao_produto(),
+                            listaItens.get(i).getQuantidade(),
+                            listaItens.get(i).getPreco(),
+                            listaItens.get(i).getQuantidade() * listaItens.get(i).getPreco()
+                        });
+                    }                    
+                }
+                return;
+            }
+        });
         
     }
     
