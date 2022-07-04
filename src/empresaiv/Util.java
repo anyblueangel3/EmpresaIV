@@ -6,13 +6,13 @@ package empresaiv;
  */
 public class Util {
     
-    public double spaceToDouble(String StringValor) {
+    public double spaceToDouble(String stringValor) {
         String valor = "";
-        int tamanhoString = StringValor.length();
-        if(tamanhoString == 0) StringValor = "0.00";
-        for(int i = 0; i < tamanhoString; i++){
-            if(StringValor.charAt(i) != ' ') {
-                valor = valor + StringValor.charAt(i);
+        int tamanhoString = stringValor.length();
+        if(tamanhoString == 0) stringValor = "0.00";
+        for(int i = 0; i < stringValor.length(); i++){
+            if(stringValor.charAt(i) != ' ') {
+                valor = valor + stringValor.charAt(i);
             } 
         }
         if(valor.equals("")) valor = "0.00";

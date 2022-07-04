@@ -280,7 +280,63 @@ public class PedidosClienteDAO {
         return true;
     }
 
+    public boolean baixarEstoque(ArrayList<ItensPedidoClienteEstendida> listaItens) {
+        if(listaItens.size() == 0) {
+            JOptionPane.showMessageDialog(null, "Lista de itens vazia! Inclua itens ou apague pedido.");
+            return false;
+        }
+        bd = BD.getInstance();
+        try {
+            for(int i = 0; i < listaItens.size(); i++) {
+                sql = "UPDATE produtos SET quantidade = quantidade - ?,"
+                        + " data_cadastro = ?"
+                    + " WHERE id = ?;";
+                PreparedStatement statement = bd.connection.prepareStatement(sql);
+                statement.setDouble(1, listaItens.get(i).getQuantidade());
+                statement.setString(2, listaItens.get(i).getId_produto());
+                statement.executeUpdate();
+                sql = "UPDATE item_pedido_cli SET data_entrega = ?"
+                    + " WHERE id = ?;";
+                PreparedStatement statement2 = bd.connection.prepareStatement(sql);
+                statement.setDate(1, listaItens.get(i).getData_entrega());
+                statement.setInt(2, listaItens.get(i).getId());
+                statement.executeUpdate();
+            }
+        } catch (Exception erro) {
+            JOptionPane.showMessageDialog(null, "Erro ao baixar estoque!\n" + erro);
+            return false;
+        } finally {
+            BD.getInstance().close();
+        }
+        return true;
+    }
     
+    public boolean pedidoBaixado() {
+        bd = BD.getInstance();
+        try {
+            sql = "SELECT data_entrega FROM item_pedido_cli WHERE id_pedido_cli = ?;";
+            PreparedStatement statement = bd.connection.prepareStatement(sql);
+            statement.setInt(1, pedidoCliente.getId());
+            resultSet = statement.executeQuery();
+            if(resultSet.next()) {
+                itemPedidoClienteEstendida.setData_entrega(resultSet.getDate(1));
+                if(itemPedidoClienteEstendida.getData_entrega() == null) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "Pedido sem itens cadastrados, exclua pedido!");
+                return false;
+            }
+        } catch (Exception erro) {
+            JOptionPane.showMessageDialog(null, "Erro ao localizar entrega de pedido!\n" + erro);
+            return true;
+        } finally {
+            BD.getInstance().close();
+        }
+    }
+            
 }
 
 /*

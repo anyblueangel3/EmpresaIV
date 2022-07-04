@@ -7,7 +7,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -23,6 +22,7 @@ import model.ItensPedidoCliente;
 import model.ItensPedidoClienteEstendida;
 import model.PedidosCliente;
 import model.Produtos;
+import empresaiv.Util;
 
 /**
  *
@@ -31,6 +31,8 @@ import model.Produtos;
 public class GuiPedidoCliente extends JPanel {
     
     ArrayList<ItensPedidoClienteEstendida> listaItens = new ArrayList<>();
+    
+    Util util = new Util();
     
     Date nova_data = new Date();
     DateFormat formatoData = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
@@ -167,13 +169,14 @@ public class GuiPedidoCliente extends JPanel {
         add(btGravar1);
         add(btAlterar1);
         add(btExcluir1);
+        add(btBaixarEstoque);
+        add(btLocalizar);
+        add(btLimpar);
+        
         add(btNovo2);
         add(btGravar2);
         add(btAlterar2);
         add(btExcluir2);
-        add(btBaixarEstoque);
-        add(btLocalizar);
-        add(btLimpar);
         add(btLimpar2);
         
         add(lbTituloTela);
@@ -266,12 +269,20 @@ public class GuiPedidoCliente extends JPanel {
                             });
                         }
                         limparCamposItem();
-                        // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
-                        setBotoesPedido(true, false, true, true, true, true, false);
-                        //btNovo2, btGravar2, btAlterar2, btExcluir2, btLimpar2
-                        setBotoesItem(true, false, false, false, false);
-                        setTFPedido(true);
-                        setTFItem(false, false);
+                        if(!pedidosDAO.pedidoBaixado()) {
+                            // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
+                            setBotoesPedido(true, false, false, false, false, true, false);
+                            setBotoesItem(false);
+                            JOptionPane.showMessageDialog(null, "Pedido baixado!");
+                        } else {
+                            // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
+                            setBotoesPedido(true, false, true, true, true, true, true);
+                            //btNovo2, btGravar2, btAlterar2, btExcluir2, btLimpar2
+                            setBotoesItem(true);
+                            setTFPedido(true);
+                            setTFItem(false, false);
+                            JOptionPane.showMessageDialog(null, "Pedido não baixado!");
+                        }                        
                     }
                 }
                 return;
@@ -285,7 +296,6 @@ public class GuiPedidoCliente extends JPanel {
                 pedidosDAO.pedidoCliente.setId_endereco_entrega(tfId_endereco_entrega.getText());
                 pedidosDAO.pedidoCliente.setCondicao_pag(tfIdCondicao_pag.getText());
                 try {
-                    // Erro está aqui.
                     nova_data = formatoData.parse(tfData_pedido.getText());
                     java.sql.Date sqlData = new java.sql.Date(nova_data.getTime());
                     pedidosDAO.pedidoCliente.setData_pedido(sqlData);
@@ -362,6 +372,19 @@ public class GuiPedidoCliente extends JPanel {
             }
         });
         
+        btBaixarEstoque.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if(!pedidosDAO.baixarEstoque(listaItens)) {
+                    JOptionPane.showMessageDialog(null, "Pedido não baixado!");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Pedido baixado com sucesso!");
+                }
+                limparCamposPedido();
+                tableModel.setNumRows(0);
+                return;
+            }
+        });
+        
         /*
         * Eventos dos Itens do Pedido
         */
@@ -376,6 +399,7 @@ public class GuiPedidoCliente extends JPanel {
         tbPedido.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent e) { 
                 linha = tbPedido.getSelectedRow();
+                System.out.println("Linha do pedido: " + linha);
                 if(linha != -1) {
                     tfId_item.setText(String.valueOf(listaItens.get(linha).getId()));
                     tfId_produto.setText(listaItens.get(linha).getId_produto());
@@ -401,14 +425,14 @@ public class GuiPedidoCliente extends JPanel {
         
         btAlterar2.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Double quantidade = Double.parseDouble(tfQuantidade.getText());
-                if(quantidade == 0) {
+                Double quantidade = util.spaceToDouble(tfQuantidade.getText());
+                if(quantidade <= 0) {
                     JOptionPane.showMessageDialog(null, "Quantidade não pode ser zero!");
                     tfQuantidade.requestFocus();
                     return;
                 }
-                Double preco = Double.parseDouble(tfPreco.getText());
-                if(preco == 0) {
+                Double preco = util.spaceToDouble(tfPreco.getText());
+                if(preco <= 0) {
                     JOptionPane.showMessageDialog(null, "Preço não pode ser zero!");
                     tfPreco.requestFocus();
                     return;
@@ -470,14 +494,14 @@ public class GuiPedidoCliente extends JPanel {
         btGravar2.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 
-                Double quantidade = Double.parseDouble(tfQuantidade.getText());
-                if(quantidade == 0) {
+                Double quantidade = util.spaceToDouble(tfQuantidade.getText());
+                if(quantidade <= 0) {
                     JOptionPane.showMessageDialog(null, "Quantidade não pode ser zero!");
                     tfQuantidade.requestFocus();
                     return;
                 }
-                Double preco = Double.parseDouble(tfPreco.getText());
-                if(preco == 0) {
+                Double preco = util.spaceToDouble(tfPreco.getText());
+                if(preco <= 0) {
                     JOptionPane.showMessageDialog(null, "Preço não pode ser zero!");
                     tfPreco.requestFocus();
                     return;
@@ -624,3 +648,4 @@ unidade varchar(10)
 preco double 
 data_entrega datetime
 */
+
