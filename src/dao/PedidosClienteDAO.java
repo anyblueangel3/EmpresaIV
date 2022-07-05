@@ -294,13 +294,14 @@ public class PedidosClienteDAO {
                 PreparedStatement statement = bd.connection.prepareStatement(sql);
                 statement.setDouble(1, listaItens.get(i).getQuantidade());
                 statement.setString(2, listaItens.get(i).getId_produto());
+                statement.setInt(3, listaItens.get(i).getId());
                 statement.executeUpdate();
                 sql = "UPDATE item_pedido_cli SET data_entrega = ?"
                     + " WHERE id = ?;";
                 PreparedStatement statement2 = bd.connection.prepareStatement(sql);
-                statement.setDate(1, listaItens.get(i).getData_entrega());
-                statement.setInt(2, listaItens.get(i).getId());
-                statement.executeUpdate();
+                statement2.setDate(1, listaItens.get(i).getData_entrega());
+                statement2.setInt(2, listaItens.get(i).getId());
+                statement2.executeUpdate();
             }
         } catch (Exception erro) {
             JOptionPane.showMessageDialog(null, "Erro ao baixar estoque!\n" + erro);

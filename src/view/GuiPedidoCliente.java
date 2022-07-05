@@ -23,6 +23,7 @@ import model.ItensPedidoClienteEstendida;
 import model.PedidosCliente;
 import model.Produtos;
 import empresaiv.Util;
+import java.util.Calendar;
 
 /**
  *
@@ -35,7 +36,7 @@ public class GuiPedidoCliente extends JPanel {
     Util util = new Util();
     
     Date nova_data = new Date();
-    DateFormat formatoData = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    DateFormat formatoData = new SimpleDateFormat("yyyy-MM-dd");
     
     JTextField tfId_pedido, tfId_cliente, tfId_endereco_entrega, 
             tfIdCondicao_pag, tfData_pedido, tfId_item, tfId_produto, tfQuantidade,
@@ -50,6 +51,8 @@ public class GuiPedidoCliente extends JPanel {
             btLimpar, btLimpar2;
     
     int numeroItens, linha;
+    
+    boolean baixado = false;
     
     JTable tbPedido;
     DefaultTableModel tableModel = new DefaultTableModel(new String[]{}, 0) {};
@@ -274,6 +277,7 @@ public class GuiPedidoCliente extends JPanel {
                             setBotoesPedido(true, false, false, false, false, true, false);
                             setBotoesItem(false);
                             JOptionPane.showMessageDialog(null, "Pedido baixado!");
+                            baixado = true;
                         } else {
                             // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
                             setBotoesPedido(true, false, true, true, true, true, true);
@@ -282,6 +286,7 @@ public class GuiPedidoCliente extends JPanel {
                             setTFPedido(true);
                             setTFItem(false, false);
                             JOptionPane.showMessageDialog(null, "Pedido não baixado!");
+                            baixado = false;
                         }                        
                     }
                 }
@@ -374,13 +379,26 @@ public class GuiPedidoCliente extends JPanel {
         
         btBaixarEstoque.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                Date today = Calendar.getInstance().getTime();
+                String hojeString = formatoData.format(today);
+                java.sql.Date sqlData = java.sql.Date.valueOf(hojeString);
+                for(int i = 0; i < listaItens.size(); i++) {
+                    listaItens.get(i).setData_entrega(sqlData);
+                }
                 if(!pedidosDAO.baixarEstoque(listaItens)) {
                     JOptionPane.showMessageDialog(null, "Pedido não baixado!");
+                    baixado = true;
                 } else {
+                    baixado = false;
                     JOptionPane.showMessageDialog(null, "Pedido baixado com sucesso!");
                 }
-                limparCamposPedido();
                 tableModel.setNumRows(0);
+                limparCamposPedido();
+                limparCamposItem();
+                setTFPedido(false);
+                setTFItem(false, false);
+                // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
+                setBotoesPedido(true, false, false, false, true, true, false);
                 return;
             }
         });
@@ -398,6 +416,11 @@ public class GuiPedidoCliente extends JPanel {
         
         tbPedido.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent e) { 
+                if(baixado) {
+                    JOptionPane.showMessageDialog(null, "Pedido baixado no estoque,\n"
+                            + " não pode alterar nem excluir!");
+                    return;
+                }
                 linha = tbPedido.getSelectedRow();
                 System.out.println("Linha do pedido: " + linha);
                 if(linha != -1) {
@@ -560,7 +583,7 @@ public class GuiPedidoCliente extends JPanel {
                 return;
             }
         });
-        
+                
     }
     
     private void setBotoesPedido(boolean novo1, boolean gravar1, boolean alterar1,
