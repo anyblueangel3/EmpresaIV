@@ -233,6 +233,7 @@ public class GuiPedidoCliente extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 tableModel.setNumRows(0);
                 numeroItens = 0;
+                listaItens.clear();
                 limparCamposPedido();
                 limparCamposItem();
                 setTFPedido(true);
@@ -244,7 +245,8 @@ public class GuiPedidoCliente extends JPanel {
         
         btLocalizar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                int Id_pedido = Integer.parseInt(tfId_pedido.getText());
+                listaItens.clear();
+                int Id_pedido = util.spaceToInt(tfId_pedido.getText());
                 setBotoesItem(false);
                 setTFPedido(false);
                 if(!pedidosDAO.localizarPedido(Id_pedido)) {
@@ -408,6 +410,7 @@ public class GuiPedidoCliente extends JPanel {
         */
         btNovo2.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                baixado = false;
                 limparCamposItem();
                 setTFItem(false, true);
                 tfId_produto.requestFocus();
@@ -460,7 +463,9 @@ public class GuiPedidoCliente extends JPanel {
                     tfPreco.requestFocus();
                     return;
                 }
-      
+                
+                pedidosDAO.itemPedidoClienteEstendida = new ItensPedidoClienteEstendida();
+                
                 pedidosDAO.itemPedidoClienteEstendida.setId_pedido_cli(pedidosDAO.pedidoCliente.getId());
                 pedidosDAO.itemPedidoClienteEstendida.setId(Integer.parseInt(tfId_item.getText()));
                 pedidosDAO.itemPedidoClienteEstendida.setId_produto(tfId_produto.getText());
@@ -530,6 +535,8 @@ public class GuiPedidoCliente extends JPanel {
                     return;
                 }
                 
+                pedidosDAO.itemPedidoClienteEstendida = new ItensPedidoClienteEstendida();
+                
                 pedidosDAO.itemPedidoClienteEstendida.setId_pedido_cli(pedidosDAO.pedidoCliente.getId());
                 pedidosDAO.itemPedidoClienteEstendida.setId_produto(tfId_produto.getText());
                 pedidosDAO.itemPedidoClienteEstendida.setQuantidade(quantidade);
@@ -539,9 +546,18 @@ public class GuiPedidoCliente extends JPanel {
                 if(pedidosDAO.gravar2()) {
                     tfId_item.setText(String.valueOf(pedidosDAO.itemPedidoClienteEstendida.getId()));
                     numeroItens++;
+                    listaItens.add(pedidosDAO.itemPedidoClienteEstendida);
                     // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
                     setBotoesPedido(true, false, true, true, true, true, true);
-                    listaItens.add(pedidosDAO.itemPedidoClienteEstendida);
+                    for(int i = 0; i < listaItens.size(); i++) {
+                        System.out.println();
+                        System.out.print("i = " + i);
+                        System.out.print(" " + listaItens.get(i).getId());
+                        System.out.print(" " + listaItens.get(i).getId_produto());
+                        System.out.print(" " + listaItens.get(i).getDescricao_produto());
+                        System.out.print(" " + listaItens.get(i).getQuantidade());
+                        System.out.print(" " + listaItens.get(i).getPreco());
+                    }
                     // Inserindo item de pedido de cliente na tabela de itens
                     int cont = listaItens.size() - 1;
                     tableModel.addRow(new Object[] {
@@ -671,4 +687,3 @@ unidade varchar(10)
 preco double 
 data_entrega datetime
 */
-

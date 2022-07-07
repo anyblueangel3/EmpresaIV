@@ -288,13 +288,16 @@ public class PedidosClienteDAO {
         bd = BD.getInstance();
         try {
             for(int i = 0; i < listaItens.size(); i++) {
-                sql = "UPDATE produtos SET quantidade = quantidade - ?,"
-                        + " data_cadastro = ?"
+                System.out.print("i: " + i);
+                System.out.print(" " + listaItens.get(i).getId_produto());
+                System.out.print(" " + listaItens.get(i).getQuantidade());
+                System.out.print(" " + listaItens.get(i).getPreco());
+                System.out.println();
+                sql = "UPDATE produtos SET quantidade = (quantidade - ?)"
                     + " WHERE id = ?;";
                 PreparedStatement statement = bd.connection.prepareStatement(sql);
                 statement.setDouble(1, listaItens.get(i).getQuantidade());
                 statement.setString(2, listaItens.get(i).getId_produto());
-                statement.setInt(3, listaItens.get(i).getId());
                 statement.executeUpdate();
                 sql = "UPDATE item_pedido_cli SET data_entrega = ?"
                     + " WHERE id = ?;";
