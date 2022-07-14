@@ -13,6 +13,7 @@ import model.Usuarios;
 import view.GuiCadastroEndEntFor;
 import view.GuiCadastroUsuarios;
 import view.GuiPedidoCliente;
+import view.GuiPedidoFornecedor;
 
 /**
  *
@@ -236,6 +237,18 @@ public class GuiMenuPrincipal extends JFrame {
                contentPane.validate();
            }
         });
+        
+        miPedidoFornecedor.addActionListener(new ActionListener(){
+           public void actionPerformed(ActionEvent e) {
+               bloqueiaMenu();
+               GuiPedidoFornecedor label = new GuiPedidoFornecedor();
+               contentPane.removeAll();
+               contentPane.add(label);
+               contentPane.validate();
+           }
+        });
+        
+        
         
     }
     

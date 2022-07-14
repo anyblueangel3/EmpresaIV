@@ -1,8 +1,9 @@
 package view;
 
-import dao.PedidosClienteDAO;
+import dao.PedidosFornecedorDAO;
 import empresaiv.BD;
 import empresaiv.GuiMenuPrincipal;
+import empresaiv.Util;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -11,38 +12,39 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
-import model.Clientes;
-import model.ItensPedidoCliente;
-import model.ItensPedidoClienteEstendida;
-import model.PedidosCliente;
-import model.Produtos;
-import empresaiv.Util;
-import java.util.Calendar;
+import model.ItensPedidoFornecedorEstendida;
 
 /**
  *
  * @author Ronaldo Rodrigues Godoi
  */
-public class GuiPedidoCliente extends JPanel {
+public class GuiPedidoFornecedor extends JPanel {
     
-    ArrayList<ItensPedidoClienteEstendida> listaItens = new ArrayList<>();
+    ArrayList<ItensPedidoFornecedorEstendida> listaItens = new ArrayList<>();
     
     Util util = new Util();
     
     Date nova_data = new Date();
     DateFormat formatoData = new SimpleDateFormat("yyyy-MM-dd");
     
-    JTextField tfId_pedido, tfId_cliente, tfId_endereco_entrega, 
+    JTextField tfId_pedido, tfId_fornecedor, tfId_endereco_entrega, 
             tfIdCondicao_pag, tfData_pedido, tfId_item, tfId_produto, tfQuantidade,
             tfPreco, tfData_entrega;
     
-    JLabel lbTituloTela, lbId_pedido, lbId_cliente, lbId_endereco_entrega, 
+    JLabel lbTituloTela, lbId_pedido, lbId_fornecedor, lbId_endereco_entrega, 
             lbIdCondicao_pag, lbData_pedido, lbId_item, lbId_produto, lbQuantidade,
             lbPreco, lbData_entrega;
     
@@ -50,7 +52,7 @@ public class GuiPedidoCliente extends JPanel {
             btGravar2, btAlterar2, btExcluir2, btBaixarEstoque, btLocalizar,
             btLimpar, btLimpar2;
     
-    int numeroItens, linha;
+    int linha;
     
     boolean baixado = false;
     
@@ -62,16 +64,16 @@ public class GuiPedidoCliente extends JPanel {
         "Preco", "Total"};
     
     
-    PedidosClienteDAO pedidosDAO;
+    PedidosFornecedorDAO pedidosDAO;
     
-    public GuiPedidoCliente() {
+    public GuiPedidoFornecedor() {
         
         inicializarComponentes();
         definirEventos();
         
     }
     
-    private void inicializarComponentes() {
+        private void inicializarComponentes() {
         
         setLayout(null);
         
@@ -91,9 +93,9 @@ public class GuiPedidoCliente extends JPanel {
         btBaixarEstoque = new JButton(" Baixar Estoque ");
         btLocalizar = new JButton(" Localizar ");
         
-        lbTituloTela = new JLabel("Pedido a Cliente");
+        lbTituloTela = new JLabel("Pedido a Fornecedor");
         lbId_pedido = new JLabel("Id do Pedido: ");
-        lbId_cliente = new JLabel("Id do Cliente: ");
+        lbId_fornecedor = new JLabel("Id do Fornecedor: ");
         lbId_endereco_entrega = new JLabel("Id do Endereço de entrega: ");
         lbIdCondicao_pag = new JLabel("Id da Condição de pagamento: ");
         lbData_pedido = new JLabel("Data do pedido: ");
@@ -105,7 +107,7 @@ public class GuiPedidoCliente extends JPanel {
         lbData_entrega = new JLabel("Data de entrega: ");
         
         tfId_pedido = new JTextField(10);
-        tfId_cliente = new JTextField(10);
+        tfId_fornecedor = new JTextField(10);
         tfId_endereco_entrega = new JTextField(10); 
         tfIdCondicao_pag = new JTextField(10);
         tfData_pedido = new JTextField(20);
@@ -119,7 +121,7 @@ public class GuiPedidoCliente extends JPanel {
         
         lbTituloTela.setBounds(35, 25, 200, 25);
         lbId_pedido.setBounds(35, 80, 100, 25);
-        lbId_cliente.setBounds(140, 80, 100, 25);
+        lbId_fornecedor.setBounds(140, 80, 100, 25);
         lbId_endereco_entrega.setBounds(250, 80, 200, 25);
         lbIdCondicao_pag.setBounds(35, 140, 200, 25);
         lbData_pedido.setBounds(240, 140, 100, 25);
@@ -130,7 +132,7 @@ public class GuiPedidoCliente extends JPanel {
         lbPreco.setBounds(360, 250, 50, 25);
         
         tfId_pedido.setBounds(35, 110, 100, 25);
-        tfId_cliente.setBounds(140, 110, 100, 25);
+        tfId_fornecedor.setBounds(140, 110, 100, 25);
         tfId_endereco_entrega.setBounds(250, 110, 100, 25);
         tfIdCondicao_pag.setBounds(35, 170, 100, 25);
         tfData_pedido.setBounds(240, 170, 150, 25);
@@ -185,7 +187,7 @@ public class GuiPedidoCliente extends JPanel {
         add(lbTituloTela);
         add(lbTituloTela);
         add(lbId_pedido);
-        add(lbId_cliente);
+        add(lbId_fornecedor);
         add(lbId_endereco_entrega);
         add(lbIdCondicao_pag);
         add(lbData_pedido);
@@ -196,7 +198,7 @@ public class GuiPedidoCliente extends JPanel {
         add(lbData_entrega);
         
         add(tfId_pedido);
-        add(tfId_cliente);
+        add(tfId_fornecedor);
         add(tfId_endereco_entrega); 
         add(tfIdCondicao_pag);
         add(tfData_pedido);
@@ -209,13 +211,13 @@ public class GuiPedidoCliente extends JPanel {
         
         add(scrollTable);
     
-        pedidosDAO = new PedidosClienteDAO();
+        pedidosDAO = new PedidosFornecedorDAO();
         setBotoesPedido(true, false, false, false, true, true, false);
         setBotoesItem(false);
         setTFPedido(false);
         setTFItem(false, false);
-    }   
-
+    }
+        
     private void definirEventos() {
         
         /*
@@ -232,7 +234,6 @@ public class GuiPedidoCliente extends JPanel {
         btNovo1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 tableModel.setNumRows(0);
-                numeroItens = 0;
                 listaItens.clear();
                 limparCamposPedido();
                 limparCamposItem();
@@ -257,11 +258,11 @@ public class GuiPedidoCliente extends JPanel {
                         JOptionPane.showMessageDialog(null, "Pedido não tem itens cadastrados, exclua o pedido!");
                         btExcluir1.setEnabled(true);
                     } else {
-                        tfId_pedido.setText(String.valueOf(pedidosDAO.pedidoCliente.getId()));
-                        tfId_cliente.setText(pedidosDAO.pedidoCliente.getId_cliente());
-                        tfId_endereco_entrega.setText(pedidosDAO.pedidoCliente.getId_endereco_entrega());
-                        tfIdCondicao_pag.setText(pedidosDAO.pedidoCliente.getCondicao_pag());
-                        tfData_pedido.setText("" + pedidosDAO.pedidoCliente.getData_pedido());
+                        tfId_pedido.setText(String.valueOf(pedidosDAO.pedidoFornecedor.getId()));
+                        tfId_fornecedor.setText(pedidosDAO.pedidoFornecedor.getId_fornecedor());
+                        tfId_endereco_entrega.setText(pedidosDAO.pedidoFornecedor.getId_endereco_entrega());
+                        tfIdCondicao_pag.setText(pedidosDAO.pedidoFornecedor.getCondicao_pag());
+                        tfData_pedido.setText("" + pedidosDAO.pedidoFornecedor.getData_pedido());
                         tableModel.setNumRows(0);
                         for(int i = 0; i < listaItens.size(); i++ ) {
                             tableModel.addRow(new Object[] {
@@ -298,14 +299,14 @@ public class GuiPedidoCliente extends JPanel {
         
         btAlterar1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                pedidosDAO.pedidoCliente.setId(Integer.parseInt(tfId_pedido.getText()));
-                pedidosDAO.pedidoCliente.setId_cliente(tfId_cliente.getText());
-                pedidosDAO.pedidoCliente.setId_endereco_entrega(tfId_endereco_entrega.getText());
-                pedidosDAO.pedidoCliente.setCondicao_pag(tfIdCondicao_pag.getText());
+                pedidosDAO.pedidoFornecedor.setId(Integer.parseInt(tfId_pedido.getText()));
+                pedidosDAO.pedidoFornecedor.setId_fornecedor(tfId_fornecedor.getText());
+                pedidosDAO.pedidoFornecedor.setId_endereco_entrega(tfId_endereco_entrega.getText());
+                pedidosDAO.pedidoFornecedor.setCondicao_pag(tfIdCondicao_pag.getText());
                 try {
                     nova_data = formatoData.parse(tfData_pedido.getText());
                     java.sql.Date sqlData = new java.sql.Date(nova_data.getTime());
-                    pedidosDAO.pedidoCliente.setData_pedido(sqlData);
+                    pedidosDAO.pedidoFornecedor.setData_pedido(sqlData);
                 } catch (ParseException erro) {
                     JOptionPane.showMessageDialog(null, "Erro ao converter a data");
                     return;
@@ -338,14 +339,14 @@ public class GuiPedidoCliente extends JPanel {
                 
                 tableModel.setNumRows(0);
                 
-                pedidosDAO.pedidoCliente.setId_cliente(tfId_cliente.getText());
-                pedidosDAO.pedidoCliente.setId_endereco_entrega(tfId_endereco_entrega.getText());
-                pedidosDAO.pedidoCliente.setCondicao_pag(tfIdCondicao_pag.getText());
+                pedidosDAO.pedidoFornecedor.setId_fornecedor(tfId_fornecedor.getText());
+                pedidosDAO.pedidoFornecedor.setId_endereco_entrega(tfId_endereco_entrega.getText());
+                pedidosDAO.pedidoFornecedor.setCondicao_pag(tfIdCondicao_pag.getText());
                 
                 try {
                     nova_data = formatoData.parse(tfData_pedido.getText());
                     java.sql.Date sqlData = new java.sql.Date(nova_data.getTime());
-                    pedidosDAO.pedidoCliente.setData_pedido(sqlData);
+                    pedidosDAO.pedidoFornecedor.setData_pedido(sqlData);
                 } catch (ParseException erro) {
                     JOptionPane.showMessageDialog(null, "Erro ao converter a data");
                     return;
@@ -355,7 +356,7 @@ public class GuiPedidoCliente extends JPanel {
                     return;
                 } else {
                     JOptionPane.showMessageDialog(null, "Pedido gravado com sucesso!");
-                    tfId_pedido.setText(String.valueOf(pedidosDAO.pedidoCliente.getId()));
+                    tfId_pedido.setText(String.valueOf(pedidosDAO.pedidoFornecedor.getId()));
                     // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
                     setBotoesPedido(false, false, true, true, false, false, false);
                     setBotoesItem(true, true, false, false, false);
@@ -428,7 +429,6 @@ public class GuiPedidoCliente extends JPanel {
                     return;
                 }
                 linha = tbPedido.getSelectedRow();
-                System.out.println("Linha do pedido: " + linha);
                 if(linha != -1) {
                     tfId_item.setText(String.valueOf(listaItens.get(linha).getId()));
                     tfId_produto.setText(listaItens.get(linha).getId_produto());
@@ -474,24 +474,24 @@ public class GuiPedidoCliente extends JPanel {
                     return;
                 }
                 
-                pedidosDAO.itemPedidoClienteEstendida = new ItensPedidoClienteEstendida();
+                pedidosDAO.itemPedidoFornecedorEstendida = new ItensPedidoFornecedorEstendida();
                 
-                pedidosDAO.itemPedidoClienteEstendida.setId_pedido_cli(pedidosDAO.pedidoCliente.getId());
-                pedidosDAO.itemPedidoClienteEstendida.setId(Integer.parseInt(tfId_item.getText()));
-                pedidosDAO.itemPedidoClienteEstendida.setId_produto(tfId_produto.getText());
-                pedidosDAO.itemPedidoClienteEstendida.setQuantidade(quantidade);
-                pedidosDAO.itemPedidoClienteEstendida.setPreco(preco);
-                pedidosDAO.itemPedidoClienteEstendida.setDescricao_produto(pedidosDAO.produto.getDescricao());
+                pedidosDAO.itemPedidoFornecedorEstendida.setId_pedido_for(pedidosDAO.pedidoFornecedor.getId());
+                pedidosDAO.itemPedidoFornecedorEstendida.setId(Integer.parseInt(tfId_item.getText()));
+                pedidosDAO.itemPedidoFornecedorEstendida.setId_produto(tfId_produto.getText());
+                pedidosDAO.itemPedidoFornecedorEstendida.setQuantidade(quantidade);
+                pedidosDAO.itemPedidoFornecedorEstendida.setPreco(preco);
+                pedidosDAO.itemPedidoFornecedorEstendida.setDescricao_produto(pedidosDAO.produto.getDescricao());
                 
                 if(!pedidosDAO.alterar2()) {
                     JOptionPane.showMessageDialog(null, "Erro ao gravar alteração!");
                 } else {
                     listaItens.get(linha).setId_produto(
-                            pedidosDAO.itemPedidoClienteEstendida.getId_produto());
+                            pedidosDAO.itemPedidoFornecedorEstendida.getId_produto());
                     listaItens.get(linha).setQuantidade(
-                            pedidosDAO.itemPedidoClienteEstendida.getQuantidade());
+                            pedidosDAO.itemPedidoFornecedorEstendida.getQuantidade());
                     listaItens.get(linha).setPreco(
-                            pedidosDAO.itemPedidoClienteEstendida.getPreco());
+                            pedidosDAO.itemPedidoFornecedorEstendida.getPreco());
                     listaItens.get(linha).setDescricao_produto(pedidosDAO.produto.getDescricao());
                     
                     tableModel.setNumRows(0);
@@ -523,7 +523,7 @@ public class GuiPedidoCliente extends JPanel {
                     return;
                 } else {
                     System.out.println("Preço de venda: " + pedidosDAO.produto.getPreco_venda());
-                    tfPreco.setText(String.valueOf(pedidosDAO.produto.getPreco_venda()));
+                    tfPreco.setText(String.valueOf(pedidosDAO.produto.getPreco_ultima_compra()));
                     return;
                 }
             }
@@ -545,18 +545,17 @@ public class GuiPedidoCliente extends JPanel {
                     return;
                 }
                 
-                pedidosDAO.itemPedidoClienteEstendida = new ItensPedidoClienteEstendida();
+                pedidosDAO.itemPedidoFornecedorEstendida = new ItensPedidoFornecedorEstendida();
                 
-                pedidosDAO.itemPedidoClienteEstendida.setId_pedido_cli(pedidosDAO.pedidoCliente.getId());
-                pedidosDAO.itemPedidoClienteEstendida.setId_produto(tfId_produto.getText());
-                pedidosDAO.itemPedidoClienteEstendida.setQuantidade(quantidade);
-                pedidosDAO.itemPedidoClienteEstendida.setPreco(preco);
-                pedidosDAO.itemPedidoClienteEstendida.setDescricao_produto(pedidosDAO.produto.getDescricao());
+                pedidosDAO.itemPedidoFornecedorEstendida.setId_pedido_for(pedidosDAO.pedidoFornecedor.getId());
+                pedidosDAO.itemPedidoFornecedorEstendida.setId_produto(tfId_produto.getText());
+                pedidosDAO.itemPedidoFornecedorEstendida.setQuantidade(quantidade);
+                pedidosDAO.itemPedidoFornecedorEstendida.setPreco(preco);
+                pedidosDAO.itemPedidoFornecedorEstendida.setDescricao_produto(pedidosDAO.produto.getDescricao());
                 
                 if(pedidosDAO.gravar2()) {
-                    tfId_item.setText(String.valueOf(pedidosDAO.itemPedidoClienteEstendida.getId()));
-                    numeroItens++;
-                    listaItens.add(pedidosDAO.itemPedidoClienteEstendida);
+                    tfId_item.setText(String.valueOf(pedidosDAO.itemPedidoFornecedorEstendida.getId()));
+                    listaItens.add(pedidosDAO.itemPedidoFornecedorEstendida);
                     // novo1, gravar1, alterar1, excluir1, localizar, limpar, baixarEstoque
                     setBotoesPedido(true, false, true, true, true, true, true);
                     // Inserindo item de pedido de cliente na tabela de itens
@@ -568,7 +567,7 @@ public class GuiPedidoCliente extends JPanel {
                         listaItens.get(cont).getQuantidade(),
                         listaItens.get(cont).getPreco(),
                         listaItens.get(cont).getQuantidade() * listaItens.get(cont).getPreco()
-                        });
+                    });
                     JOptionPane.showMessageDialog(null, "Item gravado com sucesso!");
                     limparCamposItem();
                     setTFItem(false, false);
@@ -580,7 +579,7 @@ public class GuiPedidoCliente extends JPanel {
         
         btExcluir2.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                pedidosDAO.itemPedidoClienteEstendida.setId(Integer.parseInt(tfId_item.getText()));
+                pedidosDAO.itemPedidoFornecedorEstendida.setId(Integer.parseInt(tfId_item.getText()));
                 if(!pedidosDAO.excluir2()) {
                     JOptionPane.showMessageDialog(null, "Problema ao excluir item!");
                 } else {
@@ -602,7 +601,7 @@ public class GuiPedidoCliente extends JPanel {
         });
                 
     }
-    
+        
     private void setBotoesPedido(boolean novo1, boolean gravar1, boolean alterar1,
             boolean excluir1, boolean localizar, boolean limpar, boolean baixarEstoque) {
         btNovo1.setEnabled(novo1);
@@ -633,7 +632,7 @@ public class GuiPedidoCliente extends JPanel {
     
     private void setTFPedido(boolean portas) {
         //tfId_pedido.setEditable(porta);
-        tfId_cliente.setEditable(portas);
+        tfId_fornecedor.setEditable(portas);
         tfId_endereco_entrega.setEditable(portas);
         tfIdCondicao_pag.setEditable(portas);
         tfData_pedido.setEditable(portas);
@@ -648,7 +647,7 @@ public class GuiPedidoCliente extends JPanel {
     
     public void limparCamposPedido() {
         tfId_pedido.setText("");
-        tfId_cliente.setText("");
+        tfId_fornecedor.setText("");
         tfId_endereco_entrega.setText(""); 
         tfIdCondicao_pag.setText("");
         nova_data = new Date();
@@ -668,23 +667,3 @@ public class GuiPedidoCliente extends JPanel {
     }
     
 }
-
-/*
-Table: pedidos_cli
-Columns:
-id varchar(10) PK 
-id_cliente varchar(16) 
-id_endereco_entrega varchar(10) 
-condicao_pag varchar(10) 
-data_pedido datetime
-
-Table: item_pedido_cli
-Columns:
-id varchar(10) PK 
-id_pedido_cli varchar(10) 
-id_produto varchar(10) 
-quantidade double 
-unidade varchar(10) 
-preco double 
-data_entrega datetime
-*/

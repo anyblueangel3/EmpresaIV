@@ -4,13 +4,14 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/empresaiv/EmpresaIV.java</file>
-            <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/view/GuiCadastroClientes.java</file>
-            <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/view/GuiCadForProduto.java</file>
-            <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/model/ItensPedidoClienteEstendida.java</file>
+            <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/model/PedidosCliente.java</file>
+            <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/empresaiv/GuiMenuPrincipal.java</file>
+            <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/model/ItensPedidoFornecedorEstendida.java</file>
             <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/view/GuiPedidoCliente.java</file>
-            <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/model/ItensPedidoCliente.java</file>
+            <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/dao/PedidosFornecedorDAO.java</file>
+            <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/view/GuiPedidoFornecedor.java</file>
             <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/dao/PedidosClienteDAO.java</file>
-            <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/empresaiv/Util.java</file>
+            <file>file:/C:/Users/Usuario/webjava/EmpresaIV/src/model/PedidosFornecedor.java</file>
         </group>
     </open-files>
 </project-private>

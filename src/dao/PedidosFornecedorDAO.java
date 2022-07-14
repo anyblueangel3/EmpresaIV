@@ -10,34 +10,33 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
-import model.Clientes;
-import model.ItensPedidoCliente;
-import model.ItensPedidoClienteEstendida;
-import model.PedidosCliente;
+import model.Fornecedores;
+import model.ItensPedidoFornecedorEstendida;
+import model.PedidosFornecedor;
 import model.Produtos;
 
 /**
  *
  * @author Ronaldo Rodrigues Godoi
  */
-public class PedidosClienteDAO {
+public class PedidosFornecedorDAO {
     BD bd;
     private PreparedStatement statement;
     private ResultSet resultSet;
     public String sql;
-    public PedidosCliente pedidoCliente;
-    public ItensPedidoClienteEstendida itemPedidoClienteEstendida;
+    public PedidosFornecedor pedidoFornecedor;
+    public ItensPedidoFornecedorEstendida itemPedidoFornecedorEstendida;
     public Produtos produto;
-    public Clientes cliente;
-    public DateFormat formatoData = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    public Fornecedores fornecedor;
+    public DateFormat formatoData = new SimpleDateFormat("yyyy-MM-dd");
 
-    public PedidosClienteDAO() {
-        cliente = new Clientes();
-        pedidoCliente = new PedidosCliente();
-        itemPedidoClienteEstendida = new ItensPedidoClienteEstendida();
+    public PedidosFornecedorDAO() {
+        fornecedor = new Fornecedores();
+        pedidoFornecedor = new PedidosFornecedor();
+        itemPedidoFornecedorEstendida = new ItensPedidoFornecedorEstendida();
         produto = new Produtos();
     }
-
+    // Parei aqui...
     public boolean localizarProduto(String id_produto) {
         bd = BD.getInstance();
         produto.setId(id_produto);
@@ -55,8 +54,8 @@ public class PedidosClienteDAO {
                 produto.setPreco_venda(resultSet.getDouble(6));
                 produto.setPreco_ultima_compra(resultSet.getDouble(7));
                 produto.setData_cadastro(resultSet.getString(8));
-                itemPedidoClienteEstendida.setPreco(produto.getPreco_venda());
-                itemPedidoClienteEstendida.setDescricao_produto(produto.getDescricao());
+                itemPedidoFornecedorEstendida.setPreco(produto.getPreco_venda());
+                itemPedidoFornecedorEstendida.setDescricao_produto(produto.getDescricao());
                 return true;
             }
         } catch (SQLException erro) {
@@ -70,18 +69,18 @@ public class PedidosClienteDAO {
 
     public boolean localizarPedido(int id_pedido) {
         bd = BD.getInstance();
-        pedidoCliente.setId(id_pedido);
-        sql = "SELECT * FROM pedidos_cli WHERE id = ?;";
+        pedidoFornecedor.setId(id_pedido);
+        sql = "SELECT * FROM pedidos_for WHERE id = ?;";
         try {
             statement = bd.connection.prepareStatement(sql);
             statement.setString(1, String.valueOf(id_pedido));
             resultSet = statement.executeQuery();
             if(resultSet.next()) {
-                pedidoCliente.setId(resultSet.getInt(1));
-                pedidoCliente.setId_cliente(resultSet.getString(2));
-                pedidoCliente.setId_endereco_entrega(resultSet.getString(3));
-                pedidoCliente.setCondicao_pag(resultSet.getString(4));
-                pedidoCliente.setData_pedido(resultSet.getDate(5));
+                pedidoFornecedor.setId(resultSet.getInt(1));
+                pedidoFornecedor.setId_fornecedor(resultSet.getString(2));
+                pedidoFornecedor.setId_endereco_entrega(resultSet.getString(3));
+                pedidoFornecedor.setCondicao_pag(resultSet.getString(4));
+                pedidoFornecedor.setData_pedido(resultSet.getDate(5));
                 return true;
             }
         } catch (Exception e) {
@@ -93,29 +92,29 @@ public class PedidosClienteDAO {
         return false;
     }
     
-    public ArrayList<ItensPedidoClienteEstendida> carregarListaItens() {
-        ArrayList<ItensPedidoClienteEstendida> listaItens = new ArrayList<>();
-        ItensPedidoClienteEstendida itemPedido;
+    public ArrayList<ItensPedidoFornecedorEstendida> carregarListaItens() {
+        ArrayList<ItensPedidoFornecedorEstendida> listaItens = new ArrayList<>();
+        ItensPedidoFornecedorEstendida itemPedido;
         bd = BD.getInstance();
-        sql = "SELECT i.id,"
-                + " i.id_pedido_cli,"
-                + " i.id_produto,"
-                + " i.quantidade,"
-                + " i.preco,"
-                + " i.data_entrega,"
-                + " p.descricao FROM item_pedido_cli AS i LEFT JOIN produtos AS p"
-                + " ON  i.id_produto = p.id"
-                + " WHERE i.id_pedido_cli = ?;";
+        sql = "SELECT f.id,"
+                + " f.id_pedido_for,"
+                + " f.id_produto,"
+                + " f.quantidade,"
+                + " f.preco,"
+                + " f.data_entrega,"
+                + " p.descricao FROM item_pedido_for AS f LEFT JOIN produtos AS p"
+                + " ON  f.id_produto = p.id"
+                + " WHERE f.id_pedido_for = ?;";
         try {
             statement = bd.connection.prepareStatement(sql);
-            statement.setString(1, String.valueOf(pedidoCliente.getId()));
+            statement.setString(1, String.valueOf(pedidoFornecedor.getId()));
             resultSet = statement.executeQuery();
             int numeroItem = 0;
             while(resultSet.next()) {
                 numeroItem++;
-                itemPedido = new ItensPedidoClienteEstendida();
+                itemPedido = new ItensPedidoFornecedorEstendida();
                 itemPedido.setId(resultSet.getInt(1));
-                itemPedido.setId_pedido_cli(resultSet.getInt(2));
+                itemPedido.setId_pedido_for(resultSet.getInt(2));
                 itemPedido.setId_produto(resultSet.getString(3));
                 itemPedido.setQuantidade(resultSet.getDouble(4));
                 itemPedido.setPreco(resultSet.getDouble(5));
@@ -136,17 +135,17 @@ public class PedidosClienteDAO {
     public boolean alterar1() {
         bd = BD.getInstance();
         try {
-            sql = "UPDATE pedidos_cli SET id_cliente = ?,"
+            sql = "UPDATE pedidos_for SET id_fornecedor = ?,"
                     + " id_endereco_entrega = ?,"
                     + " condicao_pag = ?,"
                     + " data_pedido = ?"
                + " WHERE id = ?;";
             PreparedStatement statement = bd.connection.prepareStatement(sql);
-            statement.setString(1, pedidoCliente.getId_cliente());
-            statement.setString(2, pedidoCliente.getId_endereco_entrega());
-            statement.setString(3, pedidoCliente.getCondicao_pag());
-            statement.setDate(4, (Date) pedidoCliente.getData_pedido());
-            statement.setInt(5, pedidoCliente.getId());
+            statement.setString(1, pedidoFornecedor.getId_fornecedor());
+            statement.setString(2, pedidoFornecedor.getId_endereco_entrega());
+            statement.setString(3, pedidoFornecedor.getCondicao_pag());
+            statement.setDate(4, (Date) pedidoFornecedor.getData_pedido());
+            statement.setInt(5, pedidoFornecedor.getId());
             statement.executeUpdate();
         } catch (Exception erro) {
             JOptionPane.showMessageDialog(null, "erro: " + erro.toString() + " \n" + sql);
@@ -160,27 +159,27 @@ public class PedidosClienteDAO {
     public boolean gravar1() {
         bd = BD.getInstance();
         try {
-            sql = "insert into pedidos_cli (id_cliente,"
+            sql = "INSERT INTO pedidos_for (id_fornecedor,"
                     + " id_endereco_entrega,"
                     + " condicao_pag,"
                     + " data_pedido)"
-                    + " values (?, ?, ?, ?)";
+                    + " VALUES (?, ?, ?, ?)";
             PreparedStatement statement = bd.connection.prepareStatement(sql,
                     Statement.RETURN_GENERATED_KEYS);
-            statement.setString(1, pedidoCliente.getId_cliente());
-            statement.setString(2, pedidoCliente.getId_endereco_entrega());
-            statement.setString(3, pedidoCliente.getCondicao_pag());
-            statement.setDate(4, (Date) pedidoCliente.getData_pedido());
+            statement.setString(1, pedidoFornecedor.getId_fornecedor());
+            statement.setString(2, pedidoFornecedor.getId_endereco_entrega());
+            statement.setString(3, pedidoFornecedor.getCondicao_pag());
+            statement.setDate(4, (Date) pedidoFornecedor.getData_pedido());
             statement.executeUpdate();
             resultSet = statement.getGeneratedKeys();
             if (resultSet != null && resultSet.next()) {
-                pedidoCliente.setId(resultSet.getInt(1));
+                pedidoFornecedor.setId(resultSet.getInt(1));
             } else {
-                System.out.println("Não inseriu");
+                JOptionPane.showMessageDialog(null, "Não inseriu!");
                 return false;
             }
         } catch (SQLException erro) {
-            System.out.println("erro: " + erro.toString() + " " + sql);
+            JOptionPane.showMessageDialog(null, "Erro ao inserir: " + erro.toString() + "\n" + sql);
             return false;
         } finally {
             BD.getInstance().close();
@@ -191,13 +190,13 @@ public class PedidosClienteDAO {
     public boolean excluir1() {
         bd = BD.getInstance();
         try {
-            sql = "DELETE FROM pedidos_cli WHERE id = ?;";
+            sql = "DELETE FROM pedidos_for WHERE id = ?;";
             PreparedStatement statement = bd.connection.prepareStatement(sql);
-            statement.setInt(1, pedidoCliente.getId());
+            statement.setInt(1, pedidoFornecedor.getId());
             statement.executeUpdate();
-            sql = "DELETE FROM item_pedido_cli WHERE id_pedido_cli = ?;";
+            sql = "DELETE FROM item_pedido_for WHERE id_pedido_for = ?;";
             PreparedStatement statement2 = bd.connection.prepareStatement(sql);
-            statement2.setInt(1, pedidoCliente.getId());
+            statement2.setInt(1, pedidoFornecedor.getId());
             statement2.executeUpdate();
         } catch (Exception erro) {
             JOptionPane.showMessageDialog(null, "Erro ao excluír! \n" + erro);
@@ -211,17 +210,16 @@ public class PedidosClienteDAO {
     public boolean alterar2() {
         bd = BD.getInstance();
         try {
-            sql = "UPDATE item_pedido_cli SET"
+            sql = "UPDATE item_pedido_for SET"
                     + " id_produto = ?,"
                     + " quantidade = ?,"
                     + " preco = ?"
                + " WHERE id = ?;";
             PreparedStatement statement = bd.connection.prepareStatement(sql);
-            statement.setString(1, itemPedidoClienteEstendida.getId_produto());
-            statement.setDouble(2, itemPedidoClienteEstendida.getQuantidade());
-            statement.setDouble(3, itemPedidoClienteEstendida.getPreco());
-            statement.setInt(4, itemPedidoClienteEstendida.getId());
-            //statement.setDate(5, (Date) itemPedidoClienteEstendida.getData_entrega());
+            statement.setString(1, itemPedidoFornecedorEstendida.getId_produto());
+            statement.setDouble(2, itemPedidoFornecedorEstendida.getQuantidade());
+            statement.setDouble(3, itemPedidoFornecedorEstendida.getPreco());
+            statement.setInt(4, itemPedidoFornecedorEstendida.getId());
             statement.executeUpdate();
             return true;
         } catch (Exception erro) {
@@ -236,28 +234,27 @@ public class PedidosClienteDAO {
     public boolean gravar2() {
         bd = BD.getInstance();
         try {
-            sql = "insert into item_pedido_cli (id_pedido_cli,"
+            sql = "INSERT INTO item_pedido_for (id_pedido_for,"
                     + " id_produto,"
                     + " quantidade,"
                     + " preco)"
-                    + " values (?, ?, ?, ?)";
+                    + " VALUES (?, ?, ?, ?)";
             PreparedStatement statement = bd.connection.prepareStatement(sql,
                     Statement.RETURN_GENERATED_KEYS);
-            statement.setInt(1, pedidoCliente.getId());
-            statement.setString(2, itemPedidoClienteEstendida.getId_produto());
-            statement.setDouble(3, itemPedidoClienteEstendida.getQuantidade());
-            statement.setDouble(4, itemPedidoClienteEstendida.getPreco());
-            //statement.setDate(5, (Date) itemPedidoClienteEstendida.getData_entrega());
+            statement.setInt(1, pedidoFornecedor.getId());
+            statement.setString(2, itemPedidoFornecedorEstendida.getId_produto());
+            statement.setDouble(3, itemPedidoFornecedorEstendida.getQuantidade());
+            statement.setDouble(4, itemPedidoFornecedorEstendida.getPreco());
             statement.executeUpdate();
             resultSet = statement.getGeneratedKeys();
             if (resultSet != null && resultSet.next()) {
-                itemPedidoClienteEstendida.setId(resultSet.getInt(1));
+                itemPedidoFornecedorEstendida.setId(resultSet.getInt(1));
             } else {
-                System.out.println("Não inseriu");
+                JOptionPane.showMessageDialog(null, "Não inseriu!");
                 return false;
             }
         } catch (SQLException erro) {
-            System.out.println("erro: " + erro.toString() + " " + sql);
+            System.out.println("Erro ao inserir item: " + erro.toString() + "\n" + sql);
             return false;
         } finally {
             BD.getInstance().close();
@@ -268,9 +265,9 @@ public class PedidosClienteDAO {
     public boolean excluir2() {
         bd = BD.getInstance();
         try {
-            sql = "DELETE FROM item_pedido_cli WHERE id = ?;";
+            sql = "DELETE FROM item_pedido_for WHERE id = ?;";
             PreparedStatement statement = bd.connection.prepareStatement(sql);
-            statement.setInt(1, itemPedidoClienteEstendida.getId());
+            statement.setInt(1, itemPedidoFornecedorEstendida.getId());
             statement.executeUpdate();
         } catch (Exception erro) {
             JOptionPane.showMessageDialog(null, "Erro ao excluir item!\n" + erro);
@@ -281,7 +278,7 @@ public class PedidosClienteDAO {
         return true;
     }
 
-    public boolean baixarEstoque(ArrayList<ItensPedidoClienteEstendida> listaItens) {
+    public boolean baixarEstoque(ArrayList<ItensPedidoFornecedorEstendida> listaItens) {
         if(listaItens.size() == 0) {
             JOptionPane.showMessageDialog(null, "Lista de itens vazia! Inclua itens ou apague pedido.");
             return false;
@@ -289,18 +286,15 @@ public class PedidosClienteDAO {
         bd = BD.getInstance();
         try {
             for(int i = 0; i < listaItens.size(); i++) {
-                System.out.print("i: " + i);
-                System.out.print(" " + listaItens.get(i).getId_produto());
-                System.out.print(" " + listaItens.get(i).getQuantidade());
-                System.out.print(" " + listaItens.get(i).getPreco());
-                System.out.println();
-                sql = "UPDATE produtos SET quantidade = (quantidade - ?)"
+                sql = "UPDATE produtos SET quantidade = (quantidade + ?),"
+                        + " preco_ultima_compra = ?"
                     + " WHERE id = ?;";
                 PreparedStatement statement = bd.connection.prepareStatement(sql);
                 statement.setDouble(1, listaItens.get(i).getQuantidade());
-                statement.setString(2, listaItens.get(i).getId_produto());
+                statement.setDouble(2, listaItens.get(i).getPreco());
+                statement.setString(3, listaItens.get(i).getId_produto());
                 statement.executeUpdate();
-                sql = "UPDATE item_pedido_cli SET data_entrega = ?"
+                sql = "UPDATE item_pedido_for SET data_entrega = ?"
                     + " WHERE id = ?;";
                 PreparedStatement statement2 = bd.connection.prepareStatement(sql);
                 statement2.setDate(1, listaItens.get(i).getData_entrega());
@@ -319,13 +313,13 @@ public class PedidosClienteDAO {
     public boolean pedidoBaixado() {
         bd = BD.getInstance();
         try {
-            sql = "SELECT data_entrega FROM item_pedido_cli WHERE id_pedido_cli = ?;";
+            sql = "SELECT data_entrega FROM item_pedido_for WHERE id_pedido_for = ?;";
             PreparedStatement statement = bd.connection.prepareStatement(sql);
-            statement.setInt(1, pedidoCliente.getId());
+            statement.setInt(1, pedidoFornecedor.getId());
             resultSet = statement.executeQuery();
             if(resultSet.next()) {
-                itemPedidoClienteEstendida.setData_entrega(resultSet.getDate(1));
-                if(itemPedidoClienteEstendida.getData_entrega() == null) {
+                itemPedidoFornecedorEstendida.setData_entrega(resultSet.getDate(1));
+                if(itemPedidoFornecedorEstendida.getData_entrega() == null) {
                     return true;
                 } else {
                     return false;
@@ -341,18 +335,4 @@ public class PedidosClienteDAO {
             BD.getInstance().close();
         }
     }
-            
 }
-
-/*
-Table: produtos
-Columns:
-id varchar(10) PK
-descricao varchar(60)
-categoria varchar(10)
-quantidade double
-unidade varchar(10)
-preco_venda double
-preco_ultima_compra double
-data_cadastro datetime
-*/
