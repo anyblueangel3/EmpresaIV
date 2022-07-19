@@ -73,7 +73,7 @@ public class GuiPedidoFornecedor extends JPanel {
         
     }
     
-        private void inicializarComponentes() {
+    private void inicializarComponentes() {
         
         setLayout(null);
         
@@ -384,13 +384,7 @@ public class GuiPedidoFornecedor extends JPanel {
         
         btBaixarEstoque.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Date today = Calendar.getInstance().getTime();
-                String hojeString = formatoData.format(today);
-                java.sql.Date sqlData = java.sql.Date.valueOf(hojeString);
-                for(int i = 0; i < listaItens.size(); i++) {
-                    listaItens.get(i).setData_entrega(sqlData);
-                }
-                if(!pedidosDAO.baixarEstoque(listaItens)) {
+                if(!pedidosDAO.baixarEstoque()) {
                     JOptionPane.showMessageDialog(null, "Pedido não baixado!");
                     baixado = true;
                 } else {

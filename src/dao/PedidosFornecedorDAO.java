@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import javax.swing.JOptionPane;
 import model.Fornecedores;
 import model.ItensPedidoFornecedorEstendida;
@@ -54,7 +55,7 @@ public class PedidosFornecedorDAO {
                 produto.setPreco_venda(resultSet.getDouble(6));
                 produto.setPreco_ultima_compra(resultSet.getDouble(7));
                 produto.setData_cadastro(resultSet.getString(8));
-                itemPedidoFornecedorEstendida.setPreco(produto.getPreco_venda());
+                itemPedidoFornecedorEstendida.setPreco(produto.getPreco_ultima_compra());
                 itemPedidoFornecedorEstendida.setDescricao_produto(produto.getDescricao());
                 return true;
             }
@@ -278,7 +279,49 @@ public class PedidosFornecedorDAO {
         return true;
     }
 
-    public boolean baixarEstoque(ArrayList<ItensPedidoFornecedorEstendida> listaItens) {
+    public boolean baixarEstoque() {
+        java.util.Date today = Calendar.getInstance().getTime();
+        String hojeString = formatoData.format(today);
+        java.sql.Date sqlData = java.sql.Date.valueOf(hojeString);
+
+        ArrayList<ItensPedidoFornecedorEstendida> listaItens = new ArrayList<>();
+        ItensPedidoFornecedorEstendida itemPedido;
+        bd = BD.getInstance();
+        sql = "SELECT f.id,"
+                + " f.id_pedido_for,"
+                + " f.id_produto,"
+                + " f.quantidade,"
+                + " f.preco,"
+                + " f.data_entrega,"
+                + " p.descricao FROM item_pedido_for AS f LEFT JOIN produtos AS p"
+                + " ON  f.id_produto = p.id"
+                + " WHERE f.id_pedido_for = ?;";
+        try {
+            statement = bd.connection.prepareStatement(sql);
+            statement.setString(1, String.valueOf(pedidoFornecedor.getId()));
+            resultSet = statement.executeQuery();
+            int numeroItem = 0;
+            while(resultSet.next()) {
+                numeroItem++;
+                itemPedido = new ItensPedidoFornecedorEstendida();
+                itemPedido.setId(resultSet.getInt(1));
+                itemPedido.setId_pedido_for(resultSet.getInt(2));
+                itemPedido.setId_produto(resultSet.getString(3));
+                itemPedido.setQuantidade(resultSet.getDouble(4));
+                itemPedido.setPreco(resultSet.getDouble(5));
+                itemPedido.setData_entrega(resultSet.getDate(6));
+                itemPedido.setNumero_item(numeroItem);
+                itemPedido.setDescricao_produto(resultSet.getString(7));
+                itemPedido.setData_entrega(sqlData);
+                listaItens.add(itemPedido);
+            }
+            System.out.println("numeroItem = " + numeroItem);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Problemas na localização dos itens!\n" + e);
+        } finally {
+            BD.getInstance().close();
+        }
+        
         if(listaItens.size() == 0) {
             JOptionPane.showMessageDialog(null, "Lista de itens vazia! Inclua itens ou apague pedido.");
             return false;
